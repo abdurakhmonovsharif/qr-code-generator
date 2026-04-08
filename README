@@ -1,0 +1,1 @@
+docker run -d --name qr-generator -p 9191:9191 --restart unless-stopped qr-generator-web
