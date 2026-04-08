@@ -1,1 +1,5 @@
-/qr.png
+__pycache__/
+.DS_Store
+Thumbs.db
+venv/
+qr.png

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <div class="eyebrow">QR code service</div>
+        <h1>URL ni QR code ga aylantiring</h1>
+        <p class="lead">
+          Link kiriting, preview tayyor bo'ladi. Download tugmasi bosilgach fayl yuklanadi va sahifa
+          avtomatik yangilanadi.
+        </p>
+
+        <form id="qr-form" class="form" novalidate>
+          <label for="url-input">URL</label>
+          <div class="input-row">
+            <input
+              id="url-input"
+              name="url"
+              type="url"
+              placeholder="https://example.com"
+              autocomplete="off"
+              required
+            />
+            <button id="generate-btn" type="submit">QR yasash</button>
+          </div>
+          <p id="form-message" class="form-message" role="alert"></p>
+        </form>
+
+        <section id="result" class="result" hidden>
+          <div class="preview-wrap">
+            <img id="qr-preview" alt="Yaratilgan QR code preview" />
+          </div>
+          <button id="download-btn" class="download-btn" type="button">Download</button>
+          <p class="hint">Download boshlangach sahifa tozalanadi.</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </body>
+</html>
