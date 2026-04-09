@@ -7,6 +7,7 @@ const previewEl = document.getElementById("qr-preview");
 const fileLinkEl = document.getElementById("file-link");
 const savedNameEl = document.getElementById("saved-name");
 const downloadBtn = document.getElementById("download-btn");
+const maxUploadSizeBytes = 5 * 1024 * 1024;
 
 let generatedImage = "";
 let generatedFilename = "qr-code.png";
@@ -36,11 +37,29 @@ async function dataUrlToBlob(dataUrl) {
   return response.blob();
 }
 
+async function readResponsePayload(response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return { error: text || "Server xatolik qaytardi." };
+}
+
 async function uploadSelectedFile() {
   const selectedFile = fileInput.files?.[0];
 
   if (!selectedFile) {
     setMessage("Avval fayl tanlang.", "error");
+    fileInput.focus();
+    return;
+  }
+
+  if (selectedFile.size > maxUploadSizeBytes) {
+    setMessage("Fayl hajmi 5 MB dan oshmasligi kerak.", "error");
+    fileInput.value = "";
     fileInput.focus();
     return;
   }
@@ -60,7 +79,7 @@ async function uploadSelectedFile() {
       body: formData,
     });
 
-    const payload = await response.json();
+    const payload = await readResponsePayload(response);
 
     if (!response.ok) {
       throw new Error(payload.error || "QR yasab bo'lmadi.");

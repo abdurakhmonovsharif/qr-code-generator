@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import quote, urlparse
 
 from flask import Flask, jsonify, render_template, request
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from qr_utils import build_qr_png_bytes, is_valid_url
 
@@ -15,6 +16,9 @@ from qr_utils import build_qr_png_bytes, is_valid_url
 app = Flask(__name__)
 MEDIA_STORAGE_DIR = Path(os.environ.get("MEDIA_STORAGE_DIR", "/mnt/storage/media"))
 MEDIA_PUBLIC_BASE_URL = os.environ.get("MEDIA_PUBLIC_BASE_URL", "https://media.fonon.uz").rstrip("/")
+MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "5"))
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE_BYTES
 
 
 def normalize_ascii(value: str) -> str:
@@ -57,6 +61,11 @@ def build_unique_media_path(filename: str) -> Path:
 
 def build_media_url(filename: str) -> str:
     return f"{MEDIA_PUBLIC_BASE_URL}/{quote(filename)}"
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_request_entity_too_large(_error):
+    return jsonify({"error": f"Fayl hajmi {MAX_UPLOAD_SIZE_MB} MB dan oshmasligi kerak."}), 413
 
 
 @app.get("/")
