@@ -1,9 +1,11 @@
 const form = document.getElementById("qr-form");
-const urlInput = document.getElementById("url-input");
+const fileInput = document.getElementById("file-input");
 const generateBtn = document.getElementById("generate-btn");
 const messageEl = document.getElementById("form-message");
 const resultEl = document.getElementById("result");
 const previewEl = document.getElementById("qr-preview");
+const fileLinkEl = document.getElementById("file-link");
+const savedNameEl = document.getElementById("saved-name");
 const downloadBtn = document.getElementById("download-btn");
 
 let generatedImage = "";
@@ -18,19 +20,13 @@ function setMessage(text, type = "") {
   }
 }
 
-function isValidUrl(value) {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 function resetResult() {
   generatedImage = "";
   generatedFilename = "qr-code.png";
   previewEl.removeAttribute("src");
+  fileLinkEl.removeAttribute("href");
+  fileLinkEl.textContent = "";
+  savedNameEl.textContent = "";
   downloadBtn.disabled = false;
   resultEl.hidden = true;
 }
@@ -40,37 +36,28 @@ async function dataUrlToBlob(dataUrl) {
   return response.blob();
 }
 
-urlInput.addEventListener("input", () => {
-  if (!resultEl.hidden) {
-    resetResult();
-  }
+async function uploadSelectedFile() {
+  const selectedFile = fileInput.files?.[0];
 
-  setMessage("");
-});
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const rawUrl = urlInput.value.trim();
-
-  if (!isValidUrl(rawUrl)) {
-    setMessage("To'g'ri URL kiriting. Masalan: https://example.com", "error");
-    urlInput.focus();
+  if (!selectedFile) {
+    setMessage("Avval fayl tanlang.", "error");
+    fileInput.focus();
     return;
   }
 
   generateBtn.disabled = true;
-  generateBtn.textContent = "Yasalmoqda...";
-  setMessage("QR tayyorlanmoqda...");
+  fileInput.disabled = true;
+  generateBtn.textContent = "Yuklanmoqda...";
+  setMessage("Fayl saqlanmoqda va QR tayyorlanmoqda...");
   resetResult();
 
   try {
-    const response = await fetch("/api/generate", {
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    const response = await fetch("/api/upload", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url: rawUrl }),
+      body: formData,
     });
 
     const payload = await response.json();
@@ -80,27 +67,45 @@ form.addEventListener("submit", async (event) => {
     }
 
     generatedImage = payload.image;
-    generatedFilename = payload.filename || "qr-code.png";
+    generatedFilename = payload.qrFilename || "qr-code.png";
     previewEl.src = generatedImage;
+    fileLinkEl.href = payload.fileUrl;
+    fileLinkEl.textContent = payload.fileUrl;
+    savedNameEl.textContent = `Saqlangan nom: ${payload.storedFilename}`;
     downloadBtn.disabled = false;
     resultEl.hidden = false;
-    setMessage("QR tayyor. Endi download qilishingiz mumkin.", "success");
+    setMessage("Fayl saqlandi. Link va QR tayyor.", "success");
   } catch (error) {
     setMessage(error.message || "Xatolik yuz berdi.", "error");
   } finally {
     generateBtn.disabled = false;
-    generateBtn.textContent = "QR yasash";
+    fileInput.disabled = false;
+    generateBtn.textContent = "Yuklash";
   }
+}
+
+fileInput.addEventListener("change", () => {
+  resetResult();
+  setMessage("");
+
+  if (fileInput.files?.length) {
+    uploadSelectedFile();
+  }
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  uploadSelectedFile();
 });
 
 downloadBtn.addEventListener("click", async () => {
   if (!generatedImage) {
-    setMessage("Avval QR yarating.", "error");
+    setMessage("Avval fayl yuklang.", "error");
     return;
   }
 
   downloadBtn.disabled = true;
-  setMessage("Download boshlandi. Sahifa yangilanmoqda...", "success");
+  setMessage("QR fayl yuklanmoqda...", "success");
 
   try {
     const blob = await dataUrlToBlob(generatedImage);
@@ -115,8 +120,8 @@ downloadBtn.addEventListener("click", async () => {
 
     window.setTimeout(() => {
       URL.revokeObjectURL(objectUrl);
-      window.location.reload();
-    }, 900);
+      downloadBtn.disabled = false;
+    }, 500);
   } catch {
     downloadBtn.disabled = false;
     setMessage("Download ishlamadi. Qaytadan urinib ko'ring.", "error");

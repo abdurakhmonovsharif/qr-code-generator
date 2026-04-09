@@ -10,24 +10,23 @@
     <main class="page">
       <section class="card">
         <div class="eyebrow">QR code service</div>
-        <h1>URL ni QR code ga aylantiring</h1>
+        <h1>Fayl yuklang, link va QR oling</h1>
         <p class="lead">
-          Link kiriting, preview tayyor bo'ladi. Download tugmasi bosilgach fayl yuklanadi va sahifa
-          avtomatik yangilanadi.
+          Rasm yoki boshqa fayl tanlang. Tizim uni <code>/mnt/storage/media</code> ga slug nom bilan
+          saqlaydi, <code>https://media.fonon.uz/&lt;fayl-nomi&gt;</code> linkini yasaydi va shu link
+          uchun QR code tayyorlaydi.
         </p>
 
         <form id="qr-form" class="form" novalidate>
-          <label for="url-input">URL</label>
+          <label for="file-input">Fayl</label>
           <div class="input-row">
             <input
-              id="url-input"
-              name="url"
-              type="url"
-              placeholder="https://example.com"
-              autocomplete="off"
+              id="file-input"
+              name="file"
+              type="file"
               required
             />
-            <button id="generate-btn" type="submit">QR yasash</button>
+            <button id="generate-btn" type="submit">Yuklash</button>
           </div>
           <p id="form-message" class="form-message" role="alert"></p>
         </form>
@@ -36,8 +35,13 @@
           <div class="preview-wrap">
             <img id="qr-preview" alt="Yaratilgan QR code preview" />
           </div>
+          <div class="link-box">
+            <div class="link-label">Public link</div>
+            <a id="file-link" class="file-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+            <p id="saved-name" class="saved-name"></p>
+          </div>
           <button id="download-btn" class="download-btn" type="button">Download</button>
-          <p class="hint">Download boshlangach sahifa tozalanadi.</p>
+          <p class="hint">QR link uchun avtomatik yaratildi. Xohlasangiz PNG qilib yuklab olishingiz mumkin.</p>
         </section>
       </section>
     </main>
